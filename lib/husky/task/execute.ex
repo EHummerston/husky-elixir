@@ -138,7 +138,13 @@ defmodule Mix.Tasks.Husky.Execute do
 
   defp execute_cmd(cmd) do
     result =
-      "#{cmd}; echo $?"
+      case :os.type() do
+        {:win32, _} ->
+          "cmd /V:ON /c \"(#{cmd}) & echo !errorlevel!\""
+
+        _ ->
+          "#{cmd}; echo $?"
+      end
       |> to_charlist()
       |> :os.cmd()
       |> to_string()
@@ -148,7 +154,7 @@ defmodule Mix.Tasks.Husky.Execute do
       |> String.split("\n")
       |> List.pop_at(-2)
 
-    {String.to_integer(code), Enum.join(out, "\n")}
+    {String.to_integer(String.trim(code)), Enum.join(out, "\n")}
   end
 
   defp config(key) do
